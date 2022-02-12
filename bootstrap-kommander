@@ -1,11 +1,19 @@
 #!/bin/bash
 
 info () {
-  echo -e '\n\e[0;35m'$1'\e[0;37m\n'
+  if [ uname -eq Darwin ]; then
+    echo -e '\n\033[0;35m'$1'\033[0;37m\n'
+  else
+    echo -e '\n\e[0;35m'$1'\e[0;37m\n'
+  fi
 }
 
 status () {
-  echo -e '\t\e[0;92m'$1'\e[0;37m'
+  if [ uname -eq Darwin ]; then
+    echo -e '\t\033[0;92m'$1'\033[0;37m'
+  else
+    echo -e '\t\e[0;92m'$1'\e[0;37m'
+  fi
 }
 
 # Set env variables
@@ -40,6 +48,7 @@ done
 
 # Snag the new kubeconfig 
 info "Bootstrap control plane is live, getting our kubeconfig..."
+sudo rm -rf admin.conf 2>&1 1>/dev/null
 dkp get kubeconfig -c ${CLUSTER_NAME} > admin.conf
 
 # Check our konvoy nodes
