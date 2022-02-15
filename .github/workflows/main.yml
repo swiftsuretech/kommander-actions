@@ -7,10 +7,15 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-      - name: Install jq tool
+      - name: Install packages
         run: |
           sudo apt-get update
           sudo apt-get install jq
+          wget https://github.com/mesosphere/konvoy2/releases/download/v2.1.1/dkp_v2.1.1_linux_amd64.tar.gz
+          tar -xvf dkp_v2.1.1_linux_amd64.tar.gz
+          sudo mv dkp_v2.1.1_linux_amd64 /usr/local/bin/dkp
+          sudo chmod +x /usr/local/bin/dkp
+
       - name: Make sript executable
         run: |
           chmod +x "${GITHUB_WORKSPACE}/bootstrap-kommander"
