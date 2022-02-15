@@ -11,3 +11,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install jq
+      - name: Make sript executable
+        run: |
+          chmod +x "${GITHUB_WORKSPACE}/bootstrap-kommander"
+      - name: Run install script
+        run: |
+          "${GITHUB_WORKSPACE}/bootstrap-kommander"

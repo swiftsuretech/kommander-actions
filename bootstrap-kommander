@@ -32,7 +32,13 @@ dkp create bootstrap --kubeconfig $HOME/.kube/config
 dkp update bootstrap credentials aws
 
 # Get our cluster manifest
-dkp create cluster aws --cluster-name=${CLUSTER_NAME} --dry-run --additional-tags expiration=3d,owner="@david whitehouse" --control-plane-replicas 1 --worker-replicas 3 --output=yaml > ${CLUSTER_NAME}.yaml
+dkp create cluster aws \
+--cluster-name=${CLUSTER_NAME} \
+--dry-run \
+--additional-tags expiration=3d,owner="@david whitehouse" \
+--control-plane-replicas 1 \
+--worker-replicas 3 \
+--output=yaml > ${CLUSTER_NAME}.yaml
 
 # Build out the cluster
 info "Applying our cluster manifest"
@@ -80,7 +86,7 @@ info "Installing Helm Charts"
 sleep 30
 declare -i COMPCOUNT=0
 declare -i COMPREADY=0
-while [[ $COMPLETE -lt 1 || $COMPCOUNT -lt 30 ]]; do
+while [[ $COMPREADY -lt $COMPLETE || $COMPCOUNT -lt 30 ]]; do
   COMPCOUNT=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | wc -l)-1   
   COMPREADY=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | grep True | wc -l )
   status "$COMPREADY of $COMPCOUNT have completed"
