@@ -9,4 +9,4 @@ jobs:
         env:
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
-          echo $AZURE_CLIENT_SECRET
+          echo ${AZURE_CLIENT_SECRET}
