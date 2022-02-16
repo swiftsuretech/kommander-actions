@@ -15,10 +15,15 @@ status () {
   echo -e '\t\033[0;92m'$1'\033[0;37m'
 }
 
-# Set up credentials depending on chosen env't
+# Source all of our config files
+for config in $PWD/config.d/*; do
+  . $config
+done
+
+# Set env variables
 if [[ $DEPLOYMENT_TYPE == azure ]]
 then
-  # Set env variables
+  # Update AZURE credentials
   info "Setting up Azure Credentials"
   AZURE_SUBSCRIPTION_ID_B64="$(echo -n "${AZURE_SUBSCRIPTION_ID}" | base64 | tr -d '\n')"
   AZURE_TENANT_ID_B64="$(echo -n "${AZURE_TENANT_ID}" | base64 | tr -d '\n')"
@@ -27,7 +32,6 @@ then
 elif [[ $DEPLOYMENT_TYPE == azure ]]
 then
   # Update AWS credentials
-  clear
   info "Refreshing AWS Credentials"
   eval $(maws li general-services)
 else
@@ -36,8 +40,6 @@ else
 fi
 
 export KUBECONFIG=~/.kube/config
-
-clear
 
 # Spin up bootstrap cluster
 info "Bringing up Bootstrap Cluster" 
@@ -48,16 +50,16 @@ dkp create bootstrap --kubeconfig $HOME/.kube/config --with-aws-bootstrap-creden
 if [[ $DEPLOYMENT_TYPE == azure ]]
 then
   dkp create cluster azure \
-  --location eastus \
-  --cluster-name=$CLUSTER_NAME \
+  --location $AZURE_LOCATION \
+  --cluster-name $CLUSTER_NAME \
   --dry-run \
   --additional-tags $ADDITIONAL_TAGS \
   --control-plane-replicas $CONTROL_PLANE_COUNT \
   --worker-replicas $WORKER_NODE_COUNT \
   --output=yaml > $CLUSTER_NAME.yaml
 else
-  dkp create cluster azure \
-  --cluster-name=$CLUSTER_NAME \
+  dkp create cluster aws \
+  --cluster-name $CLUSTER_NAME \
   --dry-run \
   --additional-tags $ADDITIONAL_TAGS \
   --control-plane-replicas $CONTROL_PLANE_COUNT \
