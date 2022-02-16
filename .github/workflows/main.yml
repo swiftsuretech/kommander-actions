@@ -24,5 +24,5 @@ jobs:
           chmod +x "${GITHUB_WORKSPACE}/deploy"
       - name: Run install script
         run: |
-          source "${GITHUB_WORKSPACE}/settings"
+          source "${GITHUB_WORKSPACE}/config.d/*"
           "${GITHUB_WORKSPACE}/deploy"

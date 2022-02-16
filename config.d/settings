@@ -1,3 +1,6 @@
+#!/bin/bash
+
+
 # Adjust the following parameters for your new cluster
 # commit and push to instantiate the build
 
@@ -6,7 +9,7 @@ INSTALL_KOMMANDER=true                       # Opitonare 'true' or 'false'
 
 # General Settings
 
-CLUSTER_NAME=CLUSTER_NAME=$USER-azure-$(date +%s | base64 | cut -c10-13 | tr '[:upper:]' '[:lower:]')    # Generates a random string after azure to avoid collision
+CLUSTER_NAME="whitehouse-test"    # Generates a random string after azure to avoid collision
 ADDITIONAL_TAGS=expiration=3d,owner=$USER
 CONTROL_PLANE_COUNT=1                        # Set to mimimum of 3 for HA cluster
 WORKER_NODE_COUNT=3
@@ -16,9 +19,8 @@ WORKER_NODE_COUNT=3
 # ENSURE THAT YOU SAVE YOUR PASSWORD AS A SECRTET IN THE REPO
 # DO NOT STORE YOUR PASSWORD HERE !!
 
-AZURE_LOCATION=eastus
 AZURE_SUBSCRIPTION_ID="6bfddfe6-078b-4a9d-86ff-52e86464efe0"
 AZURE_TENANT_ID="a98e3fd4-b172-4731-9f98-7038f712e693"
-AZURE_CLIENT_ID="734bc5c9-fbcc-43b8-a9e6-66981a3f874a"
+AZURE_CLIENT_ID="b109374a-0845-426f-9d00-574be7c05e2f"
 AZURE_DISPLAY_NAME="$USER-konvoy"
 AZURE_LOCATION="eastus"
