@@ -16,6 +16,8 @@ jobs:
           AZURE_TENANT_ID_B64: ${{ secrets.AZURE_TENANT_ID_B64 }}
           AZURE_CLIENT_ID_B64: ${{ secrets.AZURE_CLIENT_ID_B64 }}
           AZURE_CLIENT_SECRET_B64: ${{ secrets.AZURE_CLIENT_SECRET_B64 }}
+        run: |
+          echo envs set      
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Install packages
