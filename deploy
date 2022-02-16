@@ -20,7 +20,6 @@ if [[ $DEPLOYMENT_TYPE == azure ]]
 then
   # Set env variables
   info "Setting up Azure Credentials"
-  source ./settings
   AZURE_SUBSCRIPTION_ID_B64="$(echo -n "${AZURE_SUBSCRIPTION_ID}" | base64 | tr -d '\n')"
   AZURE_TENANT_ID_B64="$(echo -n "${AZURE_TENANT_ID}" | base64 | tr -d '\n')"
   AZURE_CLIENT_ID_B64="$(echo -n "${AZURE_CLIENT_ID}" | base64 | tr -d '\n')"
