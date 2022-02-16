@@ -1,12 +1,20 @@
-name: Recover pw
+name: Show Me the S3cr3tz
 on: push
 
 jobs:
-  build:
+  debug:
+    name: Debug
     runs-on: ubuntu-latest
+
     steps:
-      - name: Setting envs
-        env:
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        run: |
-          echo ${AZURE_CLIENT_SECRET}
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up secret file
+      env:
+        DEBUG_PASSWORD: ${{ secrets.AZURE_CLIENT_SECRET }}
+      run: |
+        echo $DEBUG_PASSWORD >> secrets.txt
+
+    - name: Run tmate
+      uses: mxschmitt/action-tmate@v2
