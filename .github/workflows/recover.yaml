@@ -1,0 +1,12 @@
+name: Recover pw
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setting envs
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          echo $AZURE_CLIENT_SECRET
