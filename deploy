@@ -1,0 +1,137 @@
+#!/bin/bash
+
+# ----------------------------------------------------------------------------
+# Author: Dave Whitehouse
+# Created: Date: 16 Feb 22
+# Contact: @David Whitehouse
+# ---------------------------------------------------------------------------
+
+# Some pretify functions
+info () {
+  echo -e '\n\033[0;35m'$1'\033[0;37m\n'
+}
+
+status () {
+  echo -e '\t\033[0;92m'$1'\033[0;37m'
+}
+
+# Set up credentials depending on chosen env't
+if [[ $DEPLOYMENT_TYPE == azure ]]
+then
+  # Set env variables
+  info "Setting up Azure Credentials"
+  source settings
+  AZURE_SUBSCRIPTION_ID_B64="$(echo -n "${AZURE_SUBSCRIPTION_ID}" | base64 | tr -d '\n')"
+  AZURE_TENANT_ID_B64="$(echo -n "${AZURE_TENANT_ID}" | base64 | tr -d '\n')"
+  AZURE_CLIENT_ID_B64="$(echo -n "${AZURE_CLIENT_ID}" | base64 | tr -d '\n')"
+  AZURE_CLIENT_SECRET_B64="$(echo -n "${AZURE_CLIENT_SECRET}" | base64 | tr -d '\n')"
+elif [[ $DEPLOYMENT_TYPE == azure ]]
+then
+  # Update AWS credentials
+  clear
+  info "Refreshing AWS Credentials"
+  eval $(maws li general-services)
+else
+  info "I didn't recognise environment type: $DEPLOYMENT_TYPE. \
+  Please update that variable in the settings"
+fi
+
+export KUBECONFIG=~/.kube/config
+
+clear
+
+# Spin up bootstrap cluster
+info "Bringing up Bootstrap Cluster" 
+dkp delete bootstrap
+dkp create bootstrap --kubeconfig $HOME/.kube/config --with-aws-bootstrap-credentials=false
+
+# Get our cluster manifest
+if [[ $DEPLOYMENT_TYPE == azure ]]
+then
+  dkp create cluster azure \
+  --location eastus \
+  --cluster-name=$CLUSTER_NAME \
+  --dry-run \
+  --additional-tags $ADDITIONAL_TAGS \
+  --control-plane-replicas $CONTROL_PLANE_COUNT \
+  --worker-replicas $WORKER_NODE_COUNT \
+  --output=yaml > $CLUSTER_NAME.yaml
+else
+  dkp create cluster azure \
+  --cluster-name=$CLUSTER_NAME \
+  --dry-run \
+  --additional-tags $ADDITIONAL_TAGS \
+  --control-plane-replicas $CONTROL_PLANE_COUNT \
+  --worker-replicas $WORKER_NODE_COUNT \
+  --output=yaml > $CLUSTER_NAME.yaml
+fi
+
+# Build out the cluster
+info "Applying our cluster manifest"
+kubectl apply -f $CLUSTER_NAME.yaml
+rm -f $CLUSTER_NAME.yaml
+
+# Wait for boostrap CP
+info "Waiting for our Bootstrap Control Plane to come online"
+sleep 15
+while [ $(kubectl get machine | grep Running | wc -l) -lt 1 ]; do
+  status "Waiting for Control Plane"
+  sleep 30
+done
+
+# Snag the new kubeconfig 
+info "Bootstrap control plane is live, getting our kubeconfig..."
+rm -f admin.conf 2>&1 1>/dev/null
+dkp get kubeconfig -c ${CLUSTER_NAME} > admin.conf
+
+# Check our konvoy nodes
+info "Waiting for all nodes to come up"
+while [ $(kubectl --kubeconfig=admin.conf get nodes | grep Ready | wc -l) -lt 4 ]; do
+  status "Waiting for all nodes to come up. Currently $(kubectl --kubeconfig=admin.conf get nodes | grep Ready | wc -l) of 4."
+  sleep 30
+done
+
+# Shifting bootstrap controller to the cluster
+info "Moving bootstrap controllers to the cluster"
+dkp create bootstrap controllers --with-aws-bootstrap-credentials=false --kubeconfig admin.conf
+info "Konvoy Installation Complete"
+
+# Pivot to Env't
+if [[ $DEPLOYMENT_TYPE == azure ]]
+then
+  info "Pivoting to Azure"
+else
+  info "Pivoting to AWS"
+fi
+dkp move --to-kubeconfig admin.conf
+
+# Delete bootstrap
+info "Deleting local Bootstrap"
+dkp delete bootstrap
+export KUBECONFIG=$PWD/admin.conf
+
+if ! $INSTALL_KOMMANDER
+then
+  info "Konvoy has installed. Not installing Kommander. Exiting"
+  exit 0
+fi
+
+# Install Kommander
+info "Installing Kommander"
+kommander install
+info "Installing Helm Charts"
+sleep 30
+declare -i COMPCOUNT=0
+declare -i COMPREADY=0
+while [[ $COMPREADY -lt $COMPLETE || $COMPCOUNT -lt 30 ]]; do
+  COMPCOUNT=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | wc -l)-1   
+  COMPREADY=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | grep True | wc -l )
+  status "$COMPREADY of $COMPCOUNT have completed"
+  sleep 15
+done
+
+# Get creds and URL
+URL=$(kubectl -n kommander --kubeconfig admin.conf get svc kommander-traefik -o go-template='https://{{with index .status.loadBalancer.ingress 0}}{{or .hostname .ip}}{{end}}/dkp/kommander/dashboard{{ "\n"}}')
+CREDS=$(kubectl -n kommander --kubeconfig admin.conf get secret dkp-credentials -o go-template='Username: {{.data.username|base64decode}}{{ "\n"}}Password: {{.data.password|base64decode}}{{ "\n"}}')
+status $URL
+status $CREDS
