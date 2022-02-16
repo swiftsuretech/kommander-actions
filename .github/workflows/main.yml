@@ -5,20 +5,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Setting envs
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_DISPLAY_NAME: ${{ secrets.AZURE_DISPLAY_NAME }}
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+          AZURE_SUBSCRIPTION_ID_B64: ${{ secrets.AZURE_SUBSCRIPTION_ID_B64 }}
+          AZURE_TENANT_ID_B64: ${{ secrets.AZURE_TENANT_ID_B64 }}
+          AZURE_CLIENT_ID_B64: ${{ secrets.AZURE_CLIENT_ID_B64 }}
+          AZURE_CLIENT_SECRET_B64: ${{ secrets.AZURE_CLIENT_SECRET_B64 }}
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Install packages
         run: |
           sudo apt-get update
-          sudo apt-get install jq
-          wget https://github.com/mesosphere/konvoy2/releases/download/v2.1.1/dkp_v2.1.1_linux_amd64.tar.gz
-          tar -xvf dkp_v2.1.1_linux_amd64.tar.gz
-          sudo mv dkp_v2.1.1_linux_amd64 /usr/local/bin/dkp
+          sudo mv "${GITHUB_WORKSPACE}/dkp" /usr/local/bin/dkp
+          sudo mv "${GITHUB_WORKSPACE}/kommander" /usr/local/bin/kommander
           sudo chmod +x /usr/local/bin/dkp
-
-      - name: Make sript executable
+          sudo chmod +x /usr/local/bin/kommander
+      - name: Make script executable
         run: |
-          chmod +x "${GITHUB_WORKSPACE}/bootstrap-kommander"
+          chmod +x "${GITHUB_WORKSPACE}/bootstrap-kommander-azure"
       - name: Run install script
         run: |
-          "${GITHUB_WORKSPACE}/bootstrap-kommander"
+          "${GITHUB_WORKSPACE}/bootstrap-kommander-azure"

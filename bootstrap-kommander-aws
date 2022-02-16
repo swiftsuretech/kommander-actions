@@ -1,0 +1,100 @@
+#!/bin/bash
+
+info () {
+  if [ uname -eq Darwin ]; then
+    echo -e '\n\033[0;35m'$1'\033[0;37m\n'
+  else
+    echo -e '\n\e[0;35m'$1'\e[0;37m\n'
+  fi
+}
+
+status () {
+  if [ uname -eq Darwin ]; then
+    echo -e '\t\033[0;92m'$1'\033[0;37m'
+  else
+    echo -e '\t\e[0;92m'$1'\e[0;37m'
+  fi
+}
+
+# Set env variables
+CLUSTER_NAME=whitehouse-aws-$(date +%s | base64 | cut -c10-13 | tr '[:upper:]' '[:lower:]')
+export KUBECONFIG=~/.kube/config
+
+# Update AWS credentials
+clear
+info "Refreshing AWS Creds"
+eval $(maws li general-services)
+
+# Spin up bootstrap cluster
+info "Bringing up Bootstrap Cluster" 
+dkp delete bootstrap
+dkp create bootstrap --kubeconfig $HOME/.kube/config
+dkp update bootstrap credentials aws
+
+# Get our cluster manifest
+dkp create cluster aws \
+--cluster-name=${CLUSTER_NAME} \
+--dry-run \
+--additional-tags expiration=3d,owner="@david whitehouse" \
+--control-plane-replicas 1 \
+--worker-replicas 3 \
+--output=yaml > ${CLUSTER_NAME}.yaml
+
+# Build out the cluster
+info "Applying our cluster manifest"
+kubectl apply -f ${CLUSTER_NAME}.yaml
+
+# Wait for boostrap CP
+info "Waiting for our Bootstrap Control Plane to come online"
+sleep 15
+while [ $(kubectl get machine | grep Running | wc -l) -lt 1 ]; do
+  status "Waiting for Control Plane"
+  sleep 30
+done
+
+# Snag the new kubeconfig 
+info "Bootstrap control plane is live, getting our kubeconfig..."
+sudo rm -rf admin.conf 2>&1 1>/dev/null
+dkp get kubeconfig -c ${CLUSTER_NAME} > admin.conf
+
+# Check our konvoy nodes
+info "Waiting for all nodes to come up"
+while [ $(kubectl --kubeconfig=admin.conf get nodes | grep Ready | wc -l) -lt 4 ]; do
+  status "Waiting for all nodes to come up. Currently $(kubectl --kubeconfig=admin.conf get nodes | grep Ready | wc -l) of 4."
+  sleep 30
+done
+
+# Shifting bootstrap controller to the cluster
+info "Moving bootstrap controllers to the cluster"
+dkp create bootstrap controllers --with-aws-bootstrap-credentials=false --kubeconfig admin.conf
+info "Konvoy Installation Complete"
+
+# Pivot to AWS
+info "Pivoting to AWS"
+dkp move --to-kubeconfig admin.conf
+
+# Delete bootstrap
+info "Deleting local Bootstrap"
+dkp delete bootstrap
+export KUBECONFIG=$PWD/admin.conf
+
+
+# Install Kommander
+info "Installing Kommander"
+kommander install
+info "Installing Helm Charts"
+sleep 30
+declare -i COMPCOUNT=0
+declare -i COMPREADY=0
+while [[ $COMPREADY -lt $COMPLETE || $COMPCOUNT -lt 30 ]]; do
+  COMPCOUNT=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | wc -l)-1   
+  COMPREADY=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | grep True | wc -l )
+  status "$COMPREADY of $COMPCOUNT have completed"
+  sleep 15
+done
+
+# Get creds and URL
+URL=$(kubectl -n kommander --kubeconfig admin.conf get svc kommander-traefik -o go-template='https://{{with index .status.loadBalancer.ingress 0}}{{or .hostname .ip}}{{end}}/dkp/kommander/dashboard{{ "\n"}}')
+CREDS=$(kubectl -n kommander --kubeconfig admin.conf get secret dkp-credentials -o go-template='Username: {{.data.username|base64decode}}{{ "\n"}}Password: {{.data.password|base64decode}}{{ "\n"}}')
+echo $URL
+echo $CREDS
