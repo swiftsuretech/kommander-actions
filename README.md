@@ -6,11 +6,11 @@ A completely hands free deployment of dkp and / or kommander to a cloud provider
  - Adjust the variables in the settings file to taste
  - Run the deploy file
  
-### For AWS deployment
+#### For AWS deployment
 
 Ensure that maws is installed on your machine. The script will refresh your creds and push them to CAPI
 
-### For AZURE deployment
+#### For AZURE deployment
 
 Follow these instructions in order to generate a service principal:
 
