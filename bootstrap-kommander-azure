@@ -1,48 +1,43 @@
 #!/bin/bash
 
 info () {
-  if [ uname -eq Darwin ]; then
-    echo -e '\n\033[0;35m'$1'\033[0;37m\n'
-  else
-    echo -e '\n\e[0;35m'$1'\e[0;37m\n'
-  fi
+  echo -e '\n\033[0;35m'$1'\033[0;37m\n'
 }
 
 status () {
-  if [ uname -eq Darwin ]; then
-    echo -e '\t\033[0;92m'$1'\033[0;37m'
-  else
-    echo -e '\t\e[0;92m'$1'\e[0;37m'
-  fi
+  echo -e '\t\033[0;92m'$1'\033[0;37m'
+
 }
 
 # Set env variables
-CLUSTER_NAME=whitehouse-aws-$(date +%s | base64 | cut -c10-13 | tr '[:upper:]' '[:lower:]')
+source settings
+AZURE_SUBSCRIPTION_ID_B64="$(echo -n "${AZURE_SUBSCRIPTION_ID}" | base64 | tr -d '\n')"
+AZURE_TENANT_ID_B64="$(echo -n "${AZURE_TENANT_ID}" | base64 | tr -d '\n')"
+AZURE_CLIENT_ID_B64="$(echo -n "${AZURE_CLIENT_ID}" | base64 | tr -d '\n')"
+AZURE_CLIENT_SECRET_B64="$(echo -n "${AZURE_CLIENT_SECRET}" | base64 | tr -d '\n')"
 export KUBECONFIG=~/.kube/config
 
-# Update AWS credentials
 clear
-# info "Refreshing AWS Creds"
-# eval $(maws li general-services)
 
 # Spin up bootstrap cluster
 info "Bringing up Bootstrap Cluster" 
 dkp delete bootstrap
-dkp create bootstrap --kubeconfig $HOME/.kube/config
-dkp update bootstrap credentials aws
+dkp create bootstrap --kubeconfig $HOME/.kube/config --with-aws-bootstrap-credentials=false
 
 # Get our cluster manifest
 dkp create cluster azure \
---cluster-name=${CLUSTER_NAME} \
+--location eastus \
+--cluster-name=$CLUSTER_NAME \
 --dry-run \
---additional-tags expiration=3d,owner="@david whitehouse" \
---control-plane-replicas 1 \
---worker-replicas 3 \
---output=yaml > ${CLUSTER_NAME}.yaml
+--additional-tags $ADDITIONAL_TAGS \
+--control-plane-replicas $CONTROL_PLANE_COUNT \
+--worker-replicas $WORKER_NODE_COUNT \
+--output=yaml > $CLUSTER_NAME.yaml
 
 # Build out the cluster
 info "Applying our cluster manifest"
-kubectl apply -f ${CLUSTER_NAME}.yaml
+kubectl apply -f $CLUSTER_NAME.yaml
+rm -rf $CLUSTER_NAME.yaml
 
 # Wait for boostrap CP
 info "Waiting for our Bootstrap Control Plane to come online"
@@ -54,7 +49,7 @@ done
 
 # Snag the new kubeconfig 
 info "Bootstrap control plane is live, getting our kubeconfig..."
-sudo rm -rf admin.conf 2>&1 1>/dev/null
+rm -rf admin.conf 2>&1 1>/dev/null
 dkp get kubeconfig -c ${CLUSTER_NAME} > admin.conf
 
 # Check our konvoy nodes
@@ -70,7 +65,7 @@ dkp create bootstrap controllers --with-aws-bootstrap-credentials=false --kubeco
 info "Konvoy Installation Complete"
 
 # Pivot to AWS
-info "Pivoting to AWS"
+info "Pivoting to Azure"
 dkp move --to-kubeconfig admin.conf
 
 # Delete bootstrap
