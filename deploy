@@ -139,7 +139,8 @@ done
 
 # Get creds and URL
 info "Getting Credentials"
-URL=$(kubectl -n kommander --kubeconfig admin.conf get svc kommander-traefik -o go-template='https://{{with index .status.loadBalancer.ingress 0}}{{or .hostname .ip}}{{end}}/dkp/kommander/dashboard{{ "\n"}}')
-CREDS=$(kubectl -n kommander --kubeconfig admin.conf get secret dkp-credentials -o go-template='Username: {{.data.username|base64decode}}{{ "\n"}}Password: {{.data.password|base64decode}}{{ "\n"}}')
-status $URL
-status $CREDS
+kubectl -n kommander get svc kommander-traefik -o go-template='https://{{with index .status.loadBalancer.ingress 0}}{{or .hostname .ip}}{{end}}/dkp/kommander/dashboard{{ "\n"}}'
+kubectl -n kommander get secret dkp-credentials --kubeconfig admin.conf -o go-template='Username: {{.data.username|base64decode}}{{ "\n"}}Password: {{.data.password|base64decode}}{{ "\n"}}'
+
+info "kubeconfig export:"
+cat admin.conf
