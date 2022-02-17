@@ -8,6 +8,11 @@ jobs:
       - name: Setting envs
         env:
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_SECRET_ACCESS: ${{ secrets.AWS_SECRET_ACCESS }}
+          AWS_CLIENT_SECRET: ${{ secrets.AWS_CLIENT_SECRET }}
+          AWS_PROFILE: ${{ secrets.AWS_PROFILE }}
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
         run: |
           echo envs set      
       - name: Check out repository code
@@ -25,4 +30,3 @@ jobs:
       - name: Run install script
         run: |
           "${GITHUB_WORKSPACE}/deploy"
-#

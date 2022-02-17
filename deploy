@@ -32,8 +32,8 @@ then
 elif [[ $DEPLOYMENT_TYPE == aws ]]
 then
   # Update AWS credentials
-  info "Refreshing AWS Credentials"
-  eval $(maws li general-services)
+  # info "Refreshing AWS Credentials"
+  #eval $(maws li general-services)
 else
   info "I didn't recognise environment type: $DEPLOYMENT_TYPE. \
   Please update the \"DEPLOYMENT_TYPE\" variable to either \"aws\" or \
