@@ -6,7 +6,7 @@ INSTALL_KOMMANDER=true                       # Opitonare true or false
 
 # General Settings
 
-CLUSTER_NAME="whitehouse-test2"    # Generates a random string after azure to avoid collision
+CLUSTER_NAME="whitehouse-azure-2"    # Generates a random string after azure to avoid collision
 ADDITIONAL_TAGS="expiration=3d,owner=$USER"
 CONTROL_PLANE_COUNT=1                        # Set to mimimum of 3 for HA cluster
 WORKER_NODE_COUNT=3
