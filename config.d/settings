@@ -1,26 +1,25 @@
-#!/bin/bash
-
-
 # Adjust the following parameters for your new cluster
 # commit and push to instantiate the build
 
-DEPLOYMENT_TYPE=azure                        # Options are 'azure' or 'aws'
-INSTALL_KOMMANDER=true                       # Opitonare 'true' or 'false'
+DEPLOYMENT_TYPE="aws"                        # Options are 'azure' or 'aws'
+INSTALL_KOMMANDER=true                       # Opitonare true or false
 
 # General Settings
 
 CLUSTER_NAME="whitehouse-test"    # Generates a random string after azure to avoid collision
-ADDITIONAL_TAGS=expiration=3d,owner=$USER
+ADDITIONAL_TAGS="expiration=3d,owner=$USER"
 CONTROL_PLANE_COUNT=1                        # Set to mimimum of 3 for HA cluster
 WORKER_NODE_COUNT=3
 
 # Azure Specific Settings
-# Visit the following URL to get these settings
 # ENSURE THAT YOU SAVE YOUR PASSWORD AS A SECRTET IN THE REPO
 # DO NOT STORE YOUR PASSWORD HERE !!
 
-AZURE_SUBSCRIPTION_ID="6bfddfe6-078b-4a9d-86ff-52e86464efe0"
-AZURE_TENANT_ID="a98e3fd4-b172-4731-9f98-7038f712e693"
-AZURE_CLIENT_ID="b109374a-0845-426f-9d00-574be7c05e2f"
-AZURE_DISPLAY_NAME="$USER-konvoy"
-AZURE_LOCATION="eastus"
+export AZURE_SUBSCRIPTION_ID="6bfddfe6-078b-4a9d-86ff-52e86464efe0"
+export AZURE_TENANT_ID="a98e3fd4-b172-4731-9f98-7038f712e693"
+export AZURE_CLIENT_ID="62f2558c-ccbd-462a-a65f-7d6d831ad49a"
+export AZURE_DISPLAY_NAME="whitehouse-dkp"
+export AZURE_LOCATION="eastus"
+
+# AWS sepcific settings
+AWS_REGION="us-west-2"

@@ -29,14 +29,15 @@ then
   AZURE_TENANT_ID_B64="$(echo -n "${AZURE_TENANT_ID}" | base64 | tr -d '\n')"
   AZURE_CLIENT_ID_B64="$(echo -n "${AZURE_CLIENT_ID}" | base64 | tr -d '\n')"
   AZURE_CLIENT_SECRET_B64="$(echo -n "${AZURE_CLIENT_SECRET}" | base64 | tr -d '\n')"
-elif [[ $DEPLOYMENT_TYPE == azure ]]
+elif [[ $DEPLOYMENT_TYPE == aws ]]
 then
   # Update AWS credentials
   info "Refreshing AWS Credentials"
   eval $(maws li general-services)
 else
   info "I didn't recognise environment type: $DEPLOYMENT_TYPE. \
-  Please update that variable in the settings"
+  Please update the \"DEPLOYMENT_TYPE\" variable to either \"aws\" or \
+  \"azure\" in the settings"
 fi
 
 export KUBECONFIG=~/.kube/config
@@ -64,6 +65,7 @@ else
   --additional-tags $ADDITIONAL_TAGS \
   --control-plane-replicas $CONTROL_PLANE_COUNT \
   --worker-replicas $WORKER_NODE_COUNT \
+  --region $AWS_REGION \
   --output=yaml > $CLUSTER_NAME.yaml
 fi
 
@@ -71,6 +73,10 @@ fi
 info "Applying our cluster manifest"
 kubectl apply -f $CLUSTER_NAME.yaml
 rm -f $CLUSTER_NAME.yaml
+
+if [[ $DEPLOYMENT_TYPE == aws ]]; then
+  dkp update bootstrap credentials aws
+fi
 
 # Wait for boostrap CP
 info "Waiting for our Bootstrap Control Plane to come online"
@@ -91,6 +97,8 @@ while [ $(kubectl --kubeconfig=admin.conf get nodes | grep Ready | wc -l) -lt 4 
   status "Waiting for all nodes to come up. Currently $(kubectl --kubeconfig=admin.conf get nodes | grep Ready | wc -l) of 4."
   sleep 30
 done
+status "All nodes are up"
+sleep 30
 
 # Shifting bootstrap controller to the cluster
 info "Moving bootstrap controllers to the cluster"
@@ -117,7 +125,7 @@ then
   exit 0
 fi
 
-# Install Kommander
+# Install Kommander# 
 info "Installing Kommander"
 kommander install
 info "Installing Helm Charts"
@@ -132,6 +140,7 @@ while [[ $COMPREADY -lt $COMPLETE || $COMPCOUNT -lt 30 ]]; do
 done
 
 # Get creds and URL
+info "Getting Credentials"
 URL=$(kubectl -n kommander --kubeconfig admin.conf get svc kommander-traefik -o go-template='https://{{with index .status.loadBalancer.ingress 0}}{{or .hostname .ip}}{{end}}/dkp/kommander/dashboard{{ "\n"}}')
 CREDS=$(kubectl -n kommander --kubeconfig admin.conf get secret dkp-credentials -o go-template='Username: {{.data.username|base64decode}}{{ "\n"}}Password: {{.data.password|base64decode}}{{ "\n"}}')
 status $URL
