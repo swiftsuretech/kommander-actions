@@ -4,19 +4,7 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Setting envs
-        env: 
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          AWS_SECRET_ACCESS: ${{ secrets.AWS_SECRET_ACCESS }}
-          AWS_CLIENT_SECRET: ${{ secrets.AWS_CLIENT_SECRET }}
-          AWS_PROFILE: ${{ secrets.AWS_PROFILE }}
-          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-          AWS_SECURITY_TOKEN: ${{ secrets.AWS_SECURITY_TOKEN }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-        run: |
-          echo $AZURE_CLIENT_SECRET      
+    steps:   
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Install packages
@@ -32,5 +20,12 @@ jobs:
       - name: Run install script
         env: 
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_SECRET_ACCESS: ${{ secrets.AWS_SECRET_ACCESS }}
+          AWS_CLIENT_SECRET: ${{ secrets.AWS_CLIENT_SECRET }}
+          AWS_PROFILE: ${{ secrets.AWS_PROFILE }}
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+          AWS_SECURITY_TOKEN: ${{ secrets.AWS_SECURITY_TOKEN }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         run: |
           "${GITHUB_WORKSPACE}/deploy"
