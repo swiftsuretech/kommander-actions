@@ -16,6 +16,7 @@ jobs:
           AWS_SECURITY_TOKEN: ${{ secrets.AWS_SECURITY_TOKEN }}
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         run: |
+          export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
           echo envs set      
       - name: Check out repository code
         uses: actions/checkout@v2
