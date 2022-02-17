@@ -40,12 +40,8 @@ else
   \"azure\" in the settings"
 fi
 
-export KUBECONFIG=~/.kube/config
-
-env | grep -i azure
-exit 0
-
 # Spin up bootstrap cluster
+export KUBECONFIG=~/.kube/config
 info "Bringing up Bootstrap Cluster" 
 dkp delete bootstrap
 dkp create bootstrap --kubeconfig $HOME/.kube/config --with-aws-bootstrap-credentials=false
