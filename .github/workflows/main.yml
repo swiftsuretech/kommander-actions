@@ -25,3 +25,4 @@ jobs:
       - name: Run install script
         run: |
           "${GITHUB_WORKSPACE}/deploy"
+#
