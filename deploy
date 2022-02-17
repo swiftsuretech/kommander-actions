@@ -101,16 +101,15 @@ sleep 30
 
 # Shifting bootstrap controller to the cluster
 info "Moving bootstrap controllers to the cluster"
-dkp create bootstrap controllers --with-aws-bootstrap-credentials=false --kubeconfig admin.conf
-info "Konvoy Installation Complete"
-
-# Pivot to Env't
 if [[ $DEPLOYMENT_TYPE == azure ]]
 then
-  info "Pivoting to Azure"
+  dkp create bootstrap controllers --kubeconfig admin.conf
 else
-  info "Pivoting to AWS"
+  dkp create bootstrap controllers --with-aws-bootstrap-credentials=false --kubeconfig admin.conf
 fi
+
+# Pivot to Env't
+info "Konvoy Installation Complete"
 dkp move --to-kubeconfig admin.conf
 
 # Delete bootstrap
@@ -131,7 +130,7 @@ info "Installing Helm Charts"
 sleep 30
 declare -i COMPCOUNT=0
 declare -i COMPREADY=0
-while [[ $COMPREADY -lt $COMPLETE || $COMPCOUNT -lt 30 ]]; do
+while [[ $COMPREADY -lt $COMPCOUNT || $COMPCOUNT -lt 30 ]]; do
   COMPCOUNT=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | wc -l)-1   
   COMPREADY=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | grep True | wc -l )
   status "$COMPREADY of $COMPCOUNT have completed"
