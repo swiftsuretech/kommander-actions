@@ -25,10 +25,10 @@ if [[ $DEPLOYMENT_TYPE == azure ]]
 then
   # Update AZURE credentials
   info "Setting up Azure Credentials"
-  AZURE_SUBSCRIPTION_ID_B64="$(echo -n "${AZURE_SUBSCRIPTION_ID}" | base64 | tr -d '\n')"
-  AZURE_TENANT_ID_B64="$(echo -n "${AZURE_TENANT_ID}" | base64 | tr -d '\n')"
-  AZURE_CLIENT_ID_B64="$(echo -n "${AZURE_CLIENT_ID}" | base64 | tr -d '\n')"
-  AZURE_CLIENT_SECRET_B64="$(echo -n "${AZURE_CLIENT_SECRET}" | base64 | tr -d '\n')"
+  export AZURE_SUBSCRIPTION_ID_B64="$(echo -n "${AZURE_SUBSCRIPTION_ID}" | base64 | tr -d '\n')"
+  export AZURE_TENANT_ID_B64="$(echo -n "${AZURE_TENANT_ID}" | base64 | tr -d '\n')"
+  export AZURE_CLIENT_ID_B64="$(echo -n "${AZURE_CLIENT_ID}" | base64 | tr -d '\n')"
+  export AZURE_CLIENT_SECRET_B64="$(echo -n "${AZURE_CLIENT_SECRET}" | base64 | tr -d '\n')"
 elif [[ $DEPLOYMENT_TYPE == aws ]]
 then
   # Update AWS credentials
@@ -41,6 +41,9 @@ else
 fi
 
 export KUBECONFIG=~/.kube/config
+
+env | grep -i azure
+exit 0
 
 # Spin up bootstrap cluster
 info "Bringing up Bootstrap Cluster" 
@@ -132,7 +135,7 @@ info "Installing Helm Charts"
 sleep 30
 declare -i COMPCOUNT=0
 declare -i COMPREADY=0
-while [[ $COMPREADY -lt $COMPLETE || $COMPCOUNT -lt 30 ]]; do
+while [[ $COMPREADY -lt $COMPLETE && $COMPCOUNT -lt 30 ]]; do
   COMPCOUNT=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | wc -l)-1   
   COMPREADY=$(kubectl --kubeconfig admin.conf get helmreleases -n kommander | grep True | wc -l )
   status "$COMPREADY of $COMPCOUNT have completed"

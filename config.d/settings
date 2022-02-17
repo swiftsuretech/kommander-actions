@@ -18,7 +18,6 @@ WORKER_NODE_COUNT=3
 export AZURE_SUBSCRIPTION_ID="6bfddfe6-078b-4a9d-86ff-52e86464efe0"
 export AZURE_TENANT_ID="a98e3fd4-b172-4731-9f98-7038f712e693"
 export AZURE_CLIENT_ID="3c5a0cac-dfff-4972-8493-1866cb0c05fc"
-export AZURE_DISPLAY_NAME="WHITEHOUSE-konvoy"
 export AZURE_LOCATION="eastus"
 
 # AWS sepcific settings
