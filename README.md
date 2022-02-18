@@ -10,6 +10,10 @@ Github Actions may be set to trigger on a pre-determined event, such as a push t
 
 In our case, the workflow spins up an Ubuntu 20 virtual machine, checks out our repo, moves our dkp and Kommander binaries and our deploy script into the env't and manages our secret environmental variables, ie access tokens, that are stored encrypted as secrets in the repo. To amend, update or set our secrets, navigate to the repo / settings / Secrets / Actions in Github.  
 
+
+https://user-images.githubusercontent.com/56247781/154653785-47224d5d-4ff9-4715-85b4-1758aded21ab.mp4
+
+
 The main deployment script, "deploy", is found in the root of the repo. Configuration file(s) are placed into the "config.d" directory and read by the script. It is therefore possible to use that script as a standalone rapid deployment tool from your local machine but you will need to place the secrets within the config.d directory which is sourced by the script.
 
 ## Security
